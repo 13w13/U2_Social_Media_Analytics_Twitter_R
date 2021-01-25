@@ -24,7 +24,10 @@ library(tidytext)
 library(maps)
 library(rtweet)
 library(twitteR)
-library(twitteR)
+library(stringr)
+library(syuzhet)
+library(lubridate)
+library(tidyr)
 ```
 
 ## 1.2 Load data, transform them into Datatable for better computation time and combine them. 
