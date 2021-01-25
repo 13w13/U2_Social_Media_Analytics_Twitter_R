@@ -64,19 +64,35 @@ t <- create_token("FirstApp6934",
 setup_twitter_oauth(my.key, my.secret, access_token, access_secret)
 ```
 ```{r}
-bigdata <- searchTwitter("#macron", n=150)
+chess <- searchTwitter("chess+the queen's gambit ", n=10000, since='2020-10-23', until='2021-01-24')
+```
 
-bigdata
+```{r}
+View(chess) 
 ```
 
 ```{r}
 #Chessdata <- search_tweets("CHESS OR NETFLIX OR THE QUEEN'S GAMBIT", n=3000, since="2020-10-23", until = "2021-01-24", token=t)
 
-Chessdata <- search_tweets("CHESS OR NETFLIX OR THE QUEEN'S GAMBIT", n=10000, type = "recent", token=t)
-
-View(Chessdata)
-
+OmarData <- search_tweets("LUPIN OR OMAR SY", n=100000, type="recent", token=t, lang="en", 
+                           retryonratelimit = FALSE)
 ```
+
+```{r}
+#Chessdata <- search_tweets("CHESS OR NETFLIX OR THE QUEEN'S GAMBIT", n=3000, since="2020-10-23", until = "2021-01-24", token=t)
+
+#Chessdata <- search_tweets("CHESS OR THE QUEEN'S GAMBIT", n=100000, type = "recent", token=t, language='en',
+#                           retryonratelimit = TRUE)
+```
+
+```{r}
+View(Chessdata$text)
+```
+
+```{r}
+typeof(Chessdata)
+```
+
 ```{r}
 length(unique(Chessdata$location))
 ```
@@ -115,6 +131,7 @@ ts_plot(Chessdata, "hours")+
 ```{r}
 usableText <- iconv(Chessdata$text, to = "ASCII", sub="")
 ```
+
 ```{r}
 Chessdata_corpus<-Corpus(VectorSource(usableText))
 ```
@@ -178,13 +195,15 @@ wordcloud(words = d$word, freq = d$freq, min.freq = 40,
 Chessdata.tdm<-removeSparseTerms(Chessdata.tdm,
                                   sparse=0.95)
 ```
+
 ```{r}
 Chessdata.df <- as.data.frame(as.matrix(Chessdata.tdm))
 
-View(Chessdata.df)
+#View(Chessdata.df)
 
 Chessdata.df.scale <- scale(Chessdata.df)
 ```
+
 ```{r}
 #A word is know seen as a vector 
 #We are going to compute the distance between 2 words
@@ -219,12 +238,15 @@ taglist <- vector(mode = "list", l)
 texts <- vector(mode = "character", length = l)
 
 ```
+
+
 ```{r}
 #extract all the tweet paragraphs
 
 for (i in 1:l) texts[i] <- Chessdata$text[i]
 texts <- iconv(texts, to = "ASCII", sub="")
 ```
+
 ```{r}
 # ... and populate it - extract only the # text
 j<-0
@@ -237,6 +259,7 @@ for(i in 1:l){
 alltags <- NULL
 for (i in 1:l) alltags<-union(alltags,taglist[[i]])
 ```
+
 ```{r}
 hash.graph <- graph.empty(directed = T)
 # Populate it with nodes
@@ -285,10 +308,15 @@ for(i in 1:dim(Chessdata)[1]){
 ```{r}
 sentence_sentiment<-sentiment(get_sentences(plain.text))
 sentence_sentiment
+```
+
+```{r}
 
 average_sentiment<-mean(sentence_sentiment$sentiment)
 average_sentiment
+```
 
+```{r}
 sd_sentiment<-sd(sentence_sentiment$sentiment)
 sd_sentiment
 ```
@@ -302,6 +330,7 @@ text_corpus2<-text_corpus[1:200]
 
 doc.lengths<-rowSums(as.matrix(DocumentTermMatrix(text_corpus2)))
 ```
+
 ```{r}
 #doc.lengths
 #DocumentTermMatrix(text_corpus2)
@@ -338,24 +367,3 @@ tidy_model_beta %>%
        y = "beta score",
        title = "Topic modeling")
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 2. EDA
-
-## 2.1 Intro : map 
