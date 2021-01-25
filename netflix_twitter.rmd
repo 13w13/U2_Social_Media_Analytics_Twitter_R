@@ -16,7 +16,15 @@ output:
 ## 1.1 Load libraries 
 
 ```{r message=FALSE, warning=FALSE}
-
+library(ROAuth)
+library(RCurl)
+library(ggplot2)
+library(dplyr)
+library(tidytext)
+library(maps)
+library(rtweet)
+library(twitteR)
+library(twitteR)
 ```
 
 ## 1.2 Load data, transform them into Datatable for better computation time and combine them. 
