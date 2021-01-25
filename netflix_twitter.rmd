@@ -74,8 +74,8 @@ View(chess)
 ```{r}
 #Chessdata <- search_tweets("CHESS OR NETFLIX OR THE QUEEN'S GAMBIT", n=3000, since="2020-10-23", until = "2021-01-24", token=t)
 
-OmarData <- search_tweets("LUPIN OR OMAR SY", n=100000, type="recent", token=t, lang="en", 
-                           retryonratelimit = FALSE)
+OmarData <- search_tweets("LUPIN OR OMAR SY", n=100000, type="recent", token=t, lang="en",
+                           retryonratelimit = TRUE)
 ```
 
 ```{r}
@@ -86,29 +86,29 @@ OmarData <- search_tweets("LUPIN OR OMAR SY", n=100000, type="recent", token=t, 
 ```
 
 ```{r}
-View(Chessdata$text)
+View(OmarData$text)
 ```
 
 ```{r}
-typeof(Chessdata)
+typeof(OmarData)
 ```
 
 ```{r}
-length(unique(Chessdata$location))
+length(unique(OmarData$location))
 ```
 ```{r}
-Chessdata$location2<-iconv(Chessdata$location,
+OmarData$location2<-iconv(OmarData$location,
                             to = "ASCII", sub="")
 ```
 
 ```{r}
-Chessdata$location2[Chessdata$location2==""] <- NA
-Chessdata$location2[Chessdata$location2==", "] <- NA
+OmarData$location2[OmarData$location2==""] <- NA
+OmarData$location2[OmarData$location2==", "] <- NA
 ```
 
 ```{r}
 
-Chessdata %>%count(location2, sort=TRUE) %>%
+OmarData %>%count(location2, sort=TRUE) %>%
   mutate(location2=reorder(location2,n)) %>%
   na.omit()%>% top_n(10)%>%ggplot(aes(x=location2,y=n))+
   geom_bar(stat="identity")+geom_col()+coord_flip() +
@@ -118,7 +118,7 @@ Chessdata %>%count(location2, sort=TRUE) %>%
 
 ```
 ```{r}
-ts_plot(Chessdata, "hours")+
+ts_plot(OmarData, "hours")+
   ggplot2::theme_minimal()+
   ggplot2::theme(plot.title=ggplot2::element_text(face="bold"))+
   ggplot2::labs(x=NULL,y=NULL,
@@ -129,45 +129,45 @@ ts_plot(Chessdata, "hours")+
 
 ```
 ```{r}
-usableText <- iconv(Chessdata$text, to = "ASCII", sub="")
+usableText <- iconv(OmarData$text, to = "ASCII", sub="")
 ```
 
 ```{r}
-Chessdata_corpus<-Corpus(VectorSource(usableText))
+OmarData_corpus<-Corpus(VectorSource(usableText))
 ```
 
 ```{r}
-View(Chessdata_corpus)
+View(OmarData_corpus)
 ```
 
 ```{r}
-Chessdata_corpus<-tm_map(Chessdata_corpus,
+OmarData_corpus<-tm_map(OmarData_corpus,
                           tolower)
-Chessdata_corpus<-tm_map(Chessdata_corpus,
+OmarData_corpus<-tm_map(OmarData_corpus,
                           removePunctuation)
-Chessdata_corpus<-tm_map(Chessdata_corpus,
+OmarData_corpus<-tm_map(OmarData_corpus,
                           removeNumbers)
-Chessdata_corpus<-tm_map(Chessdata_corpus,
+OmarData_corpus<-tm_map(OmarData_corpus,
                           function(x)removeWords(x,
                                                  stopwords("en")))
-Chessdata_corpus<-tm_map(Chessdata_corpus,
+OmarData_corpus<-tm_map(OmarData_corpus,
                           function(x)removeWords(x,
                                                  stopwords("french")))
-Chessdata_corpus<-tm_map(Chessdata_corpus,
+OmarData_corpus<-tm_map(OmarData_corpus,
                           function(x)removeWords(x,
                                                  stopwords("italian")))
-Chessdata_corpus<-tm_map(Chessdata_corpus,function(x)removeWords(x,stopwords("spanish")))
+OmarData_corpus<-tm_map(OmarData_corpus,function(x)removeWords(x,stopwords("spanish")))
 ```
 
 ```{r}
-text_corpus <- tm_map(Chessdata_corpus,
+text_corpus <- tm_map(OmarData_corpus,
                       content_transformer(function(x)
                         iconv(x,to='ASCII',sub='byte')))
 ```
 ```{r}
 # The document-term matrix
-Chessdata.tdm <- TermDocumentMatrix(text_corpus)
-m <- as.matrix(Chessdata.tdm)
+OmarData.tdm <- TermDocumentMatrix(text_corpus)
+m <- as.matrix(OmarData.tdm)
 m[1:5,1:10]
 ```
 ```{r}
@@ -183,7 +183,7 @@ barplot(d[1:20,]$freq, las = 3,
         ylab = "Word frequencies")
 ```
 ```{r}
-findFreqTerms(Chessdata.tdm, lowfreq=50)[1:10]
+findFreqTerms(OmarData.tdm, lowfreq=50)[1:10]
 ```
 ```{r}
 wordcloud(words = d$word, freq = d$freq, min.freq = 40,
@@ -192,16 +192,16 @@ wordcloud(words = d$word, freq = d$freq, min.freq = 40,
 ```
 
 ```{r}
-Chessdata.tdm<-removeSparseTerms(Chessdata.tdm,
+OmarData.tdm<-removeSparseTerms(OmarData.tdm,
                                   sparse=0.95)
 ```
 
 ```{r}
-Chessdata.df <- as.data.frame(as.matrix(Chessdata.tdm))
+OmarData.df <- as.data.frame(as.matrix(OmarData.tdm))
 
 #View(Chessdata.df)
 
-Chessdata.df.scale <- scale(Chessdata.df)
+OmarData.df.scale <- scale(OmarData.df)
 ```
 
 ```{r}
@@ -209,19 +209,19 @@ Chessdata.df.scale <- scale(Chessdata.df)
 #We are going to compute the distance between 2 words
 #Hierarichical clustering - dendogram  
 
-Chessdata.dist <- dist(Chessdata.df.scale,
+OmarData.dist <- dist(OmarData.df.scale,
                         method = "euclidean")
 
-Chessdata.fit<-hclust(Chessdata.dist, method="ward.D2")
+OmarData.fit<-hclust(OmarData.dist, method="ward.D2")
 
-plot(Chessdata.fit, main="Cluster-Chess") 
+plot(OmarData.fit, main="Cluster-Chess") 
 ```
 ```{r}
 #choose 5 clusters to (hope) have the good numbers of numbers 
 #per group 
-groups <- cutree(Chessdata.fit, k=5) 
-plot(Chessdata.fit, main="Cluster-Chess")
-rect.hclust(Chessdata.fit, k=5, border="red")
+groups <- cutree(OmarData.fit, k=5) 
+plot(OmarData.fit, main="Cluster")
+rect.hclust(OmarData.fit, k=5, border="red")
 ```
 ```{r}
 #we want to know if there is a kind of links within the htags 
@@ -232,7 +232,7 @@ rect.hclust(Chessdata.fit, k=5, border="red")
 tags<-function(x) toupper(grep("#",strsplit(x,
                                             " +")[[1]],value=TRUE))
 
-l <- nrow(Chessdata)
+l <- nrow(OmarData)
 taglist <- vector(mode = "list", l)
 
 texts <- vector(mode = "character", length = l)
@@ -243,7 +243,7 @@ texts <- vector(mode = "character", length = l)
 ```{r}
 #extract all the tweet paragraphs
 
-for (i in 1:l) texts[i] <- Chessdata$text[i]
+for (i in 1:l) texts[i] <- OmarData$text[i]
 texts <- iconv(texts, to = "ASCII", sub="")
 ```
 
@@ -300,8 +300,8 @@ plot(hash.graph_simple, edge.width = 2,
 ```
 ```{r}
 plain.text<-vector()
-for(i in 1:dim(Chessdata)[1]){
-  plain.text[i]<-Chessdata_corpus[[i]][[1]]
+for(i in 1:dim(OmarData)[1]){
+  plain.text[i]<-OmarData_corpus[[i]][[1]]
 }
 ```
 
@@ -344,7 +344,7 @@ dtm <- DocumentTermMatrix(text_corpus2[doc.lengths > 0])
 # Pick a random seed for replication
 SEED = sample(1:1000000, 1)
 # Let's start with 2 topics
-k = 2
+k = 3
 Topics_results<-LDA(dtm, k = k, control = list(seed = SEED))
 
 terms(Topics_results,15)
