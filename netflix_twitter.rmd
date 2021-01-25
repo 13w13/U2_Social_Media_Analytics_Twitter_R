@@ -1,0 +1,31 @@
+---
+title: "U2-Advanced Social Media Analytics"
+author: "Edgar Jullien, Antoine Settelen, Simon Weiss"
+date: "`r Sys.Date()`"
+output:
+ html_document:
+    toc: true
+    toc_float: true
+---
+
+# Navigation {.tabset .tabset-fade .tabset-pills}
+# Introduction
+
+## Presentation of the project
+
+## 1.1 Load libraries 
+
+```{r message=FALSE, warning=FALSE}
+
+```
+
+## 1.2 Load data, transform them into Datatable for better computation time and combine them. 
+```{r}
+
+```
+
+
+
+# 2. EDA
+
+## 2.1 Intro : map 
