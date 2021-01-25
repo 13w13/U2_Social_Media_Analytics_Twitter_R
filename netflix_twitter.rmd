@@ -32,8 +32,52 @@ library(tidyr)
 
 ## 1.2 Load data, transform them into Datatable for better computation time and combine them. 
 ```{r}
+download.file(url="http://curl.haxx.se/ca/cacert.pem", destfile="C:\\Users\\antoi\\Desktop\\TBS\\UE2\\Social Media Analytics\\cours3\\test\\cacert.pem")
+
+my.key <- "VjKpUNyCAQVnjvgyuPdOrp7Vs"
+my.secret <- "LXv3XKqxBMEYSHUKAOAMKH8ASW7fmqrefkjn9CBimVDNO2mzsB"
+access_token <- "1321220647624888322-M8mObeu1ANUAi7HOXqfo5ZSk9voOQ7"
+access_secret <- "u9El5vMwXMMk32VGxhyQuCDfbe08aagaHUNOIbSCyRDM6"
+
+t <- create_token("FirstApp6934",
+                  my.key,
+                  my.secret,
+                  access_token,
+                  access_secret 
+                  )
 
 ```
+
+
+```{r}
+setup_twitter_oauth(my.key, my.secret, access_token, access_secret)
+```
+```{r}
+bigdata <- searchTwitter("#macron", n=150)
+
+bigdata
+```
+
+```{r}
+Macrondata <- search_tweets("CHESS OR CHESS OR EMMANUEL MACRON OR Emmanuel Macron OR French President", n=3000, token=t)
+
+View(Macrondata)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
