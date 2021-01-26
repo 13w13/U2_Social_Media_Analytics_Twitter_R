@@ -8,10 +8,11 @@ output:
     toc_float: true
 ---
 
-# Navigation {.tabset .tabset-fade .tabset-pills}
 # Introduction
 
 ## Presentation of the project
+
+
 
 ## 1.1 Load libraries 
 
@@ -41,7 +42,7 @@ library(rvest)
 library(reshape2)
 ```
 
-## 1.2 Load data, transform them into Datatable for better computation time and combine them. 
+## 1.2 Set Token for twitter api and set .pem for encryption 
 ```{r}
 download.file(url="http://curl.haxx.se/ca/cacert.pem", destfile="cacert.pem")
 
@@ -62,74 +63,63 @@ t <- create_token("FirstApp6934",
 ```{r}
 setup_twitter_oauth(my.key, my.secret, access_token, access_secret)
 ```
-```{r}
-#chess <- searchTwitter("chess+the queen's gambit ", n=10000, since='2020-10-23', until='2021-01-24')
-```
 
+Donwload tweets with "Lupin" or "Omar Sy" in English. 
 ```{r}
-#Chessdata <- search_tweets("CHESS OR NETFLIX OR THE QUEEN'S GAMBIT", n=3000, since="2020-10-23", until = "2021-01-24", token=t)
 
 OmarData <- search_tweets("LUPIN OR OMAR SY", n=100000, type="recent", token=t, lang="en",
                            retryonratelimit = TRUE)
 ```
 
-```{r}
-#Chessdata <- search_tweets("CHESS OR NETFLIX OR THE QUEEN'S GAMBIT", n=3000, since="2020-10-23", until = "2021-01-24", token=t)
-
-#Chessdata <- search_tweets("CHESS OR THE QUEEN'S GAMBIT", n=100000, type = "recent", token=t, language='en',
-#                           retryonratelimit = TRUE)
-```
 
 ```{r}
 View(OmarData$text)
 ```
+```{r}
+length(unique(OmarData))
+```
+Without retweets, he have 1371 tweets about this topic within the week. 
 
 ```{r}
 typeof(OmarData)
 ```
+Without retweet, we have
+
+
+## 2. Study the location of the tweets
 
 ```{r}
 length(unique(OmarData$location))
 ```
+We have 1225 different location of the tweets
+
+
+
+### 2.1 Cleaning steps
+
+
+We convert the location into ASCII format
+
 ```{r}
 OmarData$location2<-iconv(OmarData$location,
                             to = "ASCII", sub="")
 ```
 
+Then we do some cleaning
+
 ```{r}
 OmarData$location2[OmarData$location2==""] <- NA
 OmarData$location2[OmarData$location2==", "] <- NA
-```
-
-Group City Names
-
-```{r}
 OmarData$location2[OmarData$location2 == 'London' & !is.na(OmarData$location2)] = 'London, England'
-```
-
-```{r}
-View(OmarData$location2[OmarData$location2 == 'London' & !is.na(OmarData$location2)])
-```
-
-```{r}
 OmarData$location2[OmarData$location2 == 'Paris' & !is.na(OmarData$location2)] = 'Paris, France'
-```
-
-```{r}
 OmarData$location2[OmarData$location2=='she/her'] <- NA
-```
-
-```{r}
 OmarData$location2[OmarData$location2 == 'Los Angeles' & !is.na(OmarData$location2)] = 'Los Angeles, CA'
-```
-
-```{r}
 OmarData$location2[OmarData$location2 == 'New York' & !is.na(OmarData$location2)] = 'New York, NY'
+OmarData$location2[OmarData$location2 == 'Ile-de-France, France' & !is.na(OmarData$location2)] = 'Paris, France'
+
 ```
 
-```{r}
-OmarData$location2[OmarData$location2 == 'Ile-de-France, France' & !is.na(OmarData$location2)] = 'Paris, France'
-```
+### 2.2 Plot Cities
 
 ```{r}
 
@@ -144,6 +134,13 @@ OmarData %>%count(location2, sort=TRUE) %>%
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(legend.position = "none")
 ```
+We can observe that the French tv shows has a wide international audience. Its first public comes from England, London then Pars and Los Angeles. This is a great indicator of the international success of a french serie.  
+
+
+## 3. Analyse the frenquency of the tweets
+
+### 3.1 Plot the time series
+
 ```{r}
 ts_plot(OmarData, "hours")+
   ggplot2::theme_minimal()+
@@ -155,6 +152,7 @@ ts_plot(OmarData, "hours")+
   )
 ```
 
+### 4. Study the device used for tweeting
 ```{r}
 OmarData %>%count(source, sort=TRUE) %>%
   mutate(source=reorder(source,n)) %>%
@@ -166,24 +164,57 @@ OmarData %>%count(source, sort=TRUE) %>%
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(legend.position = "none")
 ```
-Retweet 
+We can analyse that most of the tweets come from mobile device : first Iphone user and then Android. The most of the rest come from the desktop web app. 
+
+##Retweet 
 
 ```{r}
-
+retweet_table <- as.data.frame(prop.table(table(OmarData$is_retweet)))
+bp<- ggplot(retweet_table, aes(x="", y=Freq, fill=Var1))+
+geom_bar(width = 1, stat = "identity")
+retweet_pie <- bp + coord_polar("y", start=0)
+retweet_pie + scale_fill_brewer("Blues") +
+  theme(axis.text.x=element_blank()) +
+   geom_text(aes(y = Freq/2 + c(0, cumsum(Freq)[-length(Freq)]), 
+                label =round(Freq,2) ), size=5) +
+  labs(x=NULL,y=NULL,
+                title="Retweet ratio",
+                caption="\nSource: Data collected from Twitter's API") +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
-
-
-
-
-
+##Hastags
 
 ```{r}
-View(OmarData)
+hastags <- as.data.frame(table(unlist(OmarData$hashtags)))
+wordcloud(words = hastags$Var1, freq = hastags$Freq, min.freq = 2,
+          max.words=100, random.order=FALSE, scale = c(2,2),
+          colors=brewer.pal(3,"Dark2"))
+```
+##Mention
+
+```{r}
+mentions <- as.data.frame(table(unlist(OmarData$mentions_screen_name)))
+wordcloud(words = mentions$Var1, freq = mentions$Freq, min.freq = 5,
+          max.words=100, random.order=FALSE,
+          colors=brewer.pal(3,"Dark2"))
 ```
 
-
-
+##Verified
+```{r}
+verified_table <- as.data.frame(prop.table(table(OmarData$verified)))
+bp<- ggplot(verified_table, aes(x="", y=Freq, fill=Var1))+
+geom_bar(width = 1, stat = "identity")
+verified_pie <- bp + coord_polar("y", start=0)
+verified_pie + scale_fill_brewer("Blues") +
+  theme(axis.text.x=element_blank()) +
+   geom_text(aes(y = Freq/2 + c(0, cumsum(Freq)[-length(Freq)]), 
+                label =round(Freq,2) ), size=5)  +
+  labs(x=NULL,y=NULL,
+                title="Verified ratio",
+                caption="\nSource: Data collected from Twitter's API") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
 
 
 ```{r}
@@ -195,7 +226,7 @@ OmarData_corpus<-Corpus(VectorSource(usableText))
 ```
 
 ```{r}
-View(OmarData_corpus)
+#View(OmarData_corpus)
 ```
 
 ```{r}
@@ -244,7 +275,7 @@ barplot(d[1:20,]$freq, las = 3,
 findFreqTerms(OmarData.tdm, lowfreq=50)[1:10]
 ```
 ```{r}
-wordcloud(words = d$word, freq = d$freq, min.freq = 40,
+wordcloud(words = d$word, freq = d$freq, min.freq = 50,
           max.words=100, random.order=FALSE,
           colors=brewer.pal(4,"Dark2"))
 ```
@@ -256,9 +287,7 @@ OmarData.tdm<-removeSparseTerms(OmarData.tdm,
 
 ```{r}
 OmarData.df <- as.data.frame(as.matrix(OmarData.tdm))
-
 #View(Chessdata.df)
-
 OmarData.df.scale <- scale(OmarData.df)
 ```
 
@@ -266,41 +295,33 @@ OmarData.df.scale <- scale(OmarData.df)
 #A word is know seen as a vector 
 #We are going to compute the distance between 2 words
 #Hierarichical clustering - dendogram  
-
 OmarData.dist <- dist(OmarData.df.scale,
                         method = "euclidean")
-
 OmarData.fit<-hclust(OmarData.dist, method="ward.D2")
-
 plot(OmarData.fit, main="Cluster-Chess") 
 ```
 ```{r}
 #choose 5 clusters to (hope) have the good numbers of numbers 
 #per group 
-groups <- cutree(OmarData.fit, k=5) 
+groups <- cutree(OmarData.fit, k=4) 
 plot(OmarData.fit, main="Cluster")
-rect.hclust(OmarData.fit, k=5, border="red")
+rect.hclust(OmarData.fit, k=4, border="blue")
 ```
 ```{r}
 #we want to know if there is a kind of links within the htags 
 #behavior of followers
 #relationship between followers tweets 
 #a kind of path, a kind of map, a kind of topics
-
 tags<-function(x) toupper(grep("#",strsplit(x,
                                             " +")[[1]],value=TRUE))
-
 l <- nrow(OmarData)
 taglist <- vector(mode = "list", l)
-
 texts <- vector(mode = "character", length = l)
-
 ```
 
 
 ```{r}
 #extract all the tweet paragraphs
-
 for (i in 1:l) texts[i] <- OmarData$text[i]
 texts <- iconv(texts, to = "ASCII", sub="")
 ```
@@ -317,6 +338,7 @@ for(i in 1:l){
 alltags <- NULL
 for (i in 1:l) alltags<-union(alltags,taglist[[i]])
 ```
+
 
 ```{r}
 hash.graph <- graph.empty(directed = T)
@@ -343,14 +365,11 @@ for (tags in taglist){
 ```{r}
 V(hash.graph)$color <- "black"
 E(hash.graph)$color <- "black"
-V(hash.graph)$name <- paste("#",V(hash.graph)$name,
-                            sep = "")
 V(hash.graph)$label.cex = 0.75
-V(hash.graph)$size <- 20
-V(hash.graph)$size2 <- 2
+V(hash.graph)$size <- 50
+V(hash.graph)$size2 <- 4
 hash.graph_simple<-delete.vertices(simplify(hash.graph),
-                                   degree(hash.graph)<=5)
-
+                                   degree(hash.graph)<= 9)
 plot(hash.graph_simple, edge.width = 2,
      edge.color = "black", vertex.color = "SkyBlue2",
      vertex.frame.color="black", label.color = "black",
@@ -368,12 +387,13 @@ sentence_sentiment<-sentiment(get_sentences(plain.text))
 sentence_sentiment
 ```
 
+##Mean sentiment analysis
 ```{r}
-
 average_sentiment<-mean(sentence_sentiment$sentiment)
 average_sentiment
 ```
 
+##Median sentiment analysis
 ```{r}
 sd_sentiment<-sd(sentence_sentiment$sentiment)
 sd_sentiment
@@ -383,34 +403,63 @@ sd_sentiment
 extract_sentiment_terms(get_sentences(plain.text))
 ```
 
+## Negatives words
+```{r}
+negative_words <- as.data.frame(table(unlist(extract_sentiment_terms(get_sentences(plain.text))$negative)))
+negative_words$Var1[negative_words$Var1 == 'black'] = NA
+negative_words = na.omit(negative_words)
+wordcloud(words = negative_words$Var1, freq = negative_words$Freq, min.freq = 4,
+          max.words=100, random.order=FALSE,
+          colors=brewer.pal(4,"Dark2"))
+```
+```{r}
+negative_words <- negative_words[order(negative_words$Freq, decreasing = TRUE),]
+```
+
+```{r}
+barplot(negative_words[1:20,]$Freq, las = 3,
+        names.arg = negative_words[1:20,]$Var1,col ="lightblue",
+        main ="Most frequent negative words",
+        ylab = "Word frequencies")
+```
+
+```{r}
+positive_words <- as.data.frame(table(unlist(extract_sentiment_terms(get_sentences(plain.text))$positive)))
+wordcloud(words = positive_words$Var1, freq = positive_words$Freq, min.freq = 4,
+          max.words=100, random.order=FALSE,
+          colors=brewer.pal(4,"Dark2"))
+```
+
+```{r}
+positive_words <- positive_words[order(positive_words$Freq, decreasing = TRUE),]
+barplot(positive_words[1:20,]$Freq, las = 3,
+        names.arg = positive_words[1:20,]$Var1,col ="lightblue",
+        main ="Most frequent positive words",
+        ylab = "Word frequencies")
+```
+
+
 ```{r}
 text_corpus2<-text_corpus[1:200]
-
 doc.lengths<-rowSums(as.matrix(DocumentTermMatrix(text_corpus2)))
 ```
 
 ```{r}
 #doc.lengths
 #DocumentTermMatrix(text_corpus2)
-
 dtm <- DocumentTermMatrix(text_corpus2[doc.lengths > 0])
 ```
 
 ```{r}
 #Latence Diriged Allocation (LDA) #bayses formula ? (not exactly the same) 
-
 # Pick a random seed for replication
 SEED = sample(1:1000000, 1)
 # Let's start with 2 topics
 k = 3
 Topics_results<-LDA(dtm, k = k, control = list(seed = SEED))
-
 terms(Topics_results,15)
-
 topics(Topics_results)
-
 tidy_model_beta<-tidy(Topics_results, matrix = "beta")
-
 tidy_model_beta %>%
   group_by(topic) %>%
   top_n(10, beta) %>%
