@@ -8,13 +8,13 @@ output:
     toc_float: true
 ---
 
-# Introduction
+## 1. Project introduction
+In this project, we are going to use the Advanced Social Media Analytics course in order to study the international impact of aTfrench tv-show : Arsene Lupin. In our course, we learned how to use the api of twitter in order to establish anlaysis with the R language. Indeed, studying the tweets following the release of a series broadcast on an international platform such as Netflix allows us to better understand the reception of the show after an audiance and to measure its popularity.   
 
-## Presentation of the project
+Given the limiation of the free version of tweeter api, we can download only tweets within a 7-days windows. This is why we have chosen to study the Arsene Lupin show available on Netflix on January 7, 2021. Arsene Lupin is a rare French series on Netflix featuring an internationally known French actor (mostly from the US audience), spoken in French, whose main character is an icon of French theft and whose main venue is Paris. 
 
 
-
-## 1.1 Load libraries 
+### 1.1 Load libraries 
 
 ```{r message=FALSE, warning=FALSE}
 library(ROAuth)
@@ -42,8 +42,8 @@ library(rvest)
 library(reshape2)
 ```
 
-## 1.2 Set Token for twitter api and set .pem for encryption 
-```{r}
+### 1.2 Set Token for twitter api and set .pem for encryption 
+```{r include=FALSE}
 download.file(url="http://curl.haxx.se/ca/cacert.pem", destfile="cacert.pem")
 
 my.key <- "VjKpUNyCAQVnjvgyuPdOrp7Vs"
@@ -64,7 +64,7 @@ t <- create_token("FirstApp6934",
 setup_twitter_oauth(my.key, my.secret, access_token, access_secret)
 ```
 
-Donwload tweets with "Lupin" or "Omar Sy" in English. 
+Download tweets with "Lupin" or "Omar Sy" in English. 
 ```{r}
 
 OmarData <- search_tweets("LUPIN OR OMAR SY", n=100000, type="recent", token=t, lang="en",
@@ -91,7 +91,7 @@ Without retweet, we have
 ```{r}
 length(unique(OmarData$location))
 ```
-We have 1225 different location of the tweets
+We have more than 1000 different locations of the tweets
 
 
 
@@ -134,7 +134,7 @@ OmarData %>%count(location2, sort=TRUE) %>%
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(legend.position = "none")
 ```
-We can observe that the French tv shows has a wide international audience. Its first public comes from England, London then Pars and Los Angeles. This is a great indicator of the international success of a french serie.  
+We can observe that the French tv shows has a wide international audience. Its first public comes from England, London then Paris and Los Angeles. This is a great indicator of the international success of a french serie.  
 
 
 ## 3. Analyse the frenquency of the tweets
@@ -152,7 +152,9 @@ ts_plot(OmarData, "hours")+
   )
 ```
 
-### 4. Study the device used for tweeting
+The free version of the tweeter api allows us to retrieve tweets in a 7 days-window. 
+
+## 4. Study the device used for tweeting
 ```{r}
 OmarData %>%count(source, sort=TRUE) %>%
   mutate(source=reorder(source,n)) %>%
@@ -166,7 +168,7 @@ OmarData %>%count(source, sort=TRUE) %>%
 ```
 We can analyse that most of the tweets come from mobile device : first Iphone user and then Android. The most of the rest come from the desktop web app. 
 
-##Retweet 
+## 5. Study the retweets 
 
 ```{r}
 retweet_table <- as.data.frame(prop.table(table(OmarData$is_retweet)))
@@ -176,142 +178,31 @@ retweet_pie <- bp + coord_polar("y", start=0)
 retweet_pie + scale_fill_brewer("Blues") +
   theme(axis.text.x=element_blank()) +
    geom_text(aes(y = Freq/2 + c(0, cumsum(Freq)[-length(Freq)]), 
-                label =round(Freq,2) ), size=5) +
+                label =paste(round(Freq*100,1),"%") ), size=5) +
   labs(x=NULL,y=NULL,
                 title="Retweet ratio",
                 caption="\nSource: Data collected from Twitter's API") +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-##Hastags
+The rewteet ration is well-balanced, meaning that the tweets talking about the show causes interactivity between people which is a good sign ! 
+
+
+## 6. Hashtag
 
 ```{r}
 hastags <- as.data.frame(table(unlist(OmarData$hashtags)))
 wordcloud(words = hastags$Var1, freq = hastags$Freq, min.freq = 2,
-          max.words=100, random.order=FALSE, scale = c(2,2),
-          colors=brewer.pal(3,"Dark2"))
-```
-##Mention
-
-```{r}
-mentions <- as.data.frame(table(unlist(OmarData$mentions_screen_name)))
-wordcloud(words = mentions$Var1, freq = mentions$Freq, min.freq = 5,
           max.words=100, random.order=FALSE,
           colors=brewer.pal(3,"Dark2"))
-```
 
-##Verified
-```{r}
-verified_table <- as.data.frame(prop.table(table(OmarData$verified)))
-bp<- ggplot(verified_table, aes(x="", y=Freq, fill=Var1))+
-geom_bar(width = 1, stat = "identity")
-verified_pie <- bp + coord_polar("y", start=0)
-verified_pie + scale_fill_brewer("Blues") +
-  theme(axis.text.x=element_blank()) +
-   geom_text(aes(y = Freq/2 + c(0, cumsum(Freq)[-length(Freq)]), 
-                label =round(Freq,2) ), size=5)  +
-  labs(x=NULL,y=NULL,
-                title="Verified ratio",
-                caption="\nSource: Data collected from Twitter's API") +
-  theme(plot.title = element_text(hjust = 0.5))
 ```
+The name of the TV show comes first in this hashtag analytic. Let's study the links between the hashtags so as to better understand the behavior of tweeter users. This relationship will allow us to draw a map covering the topics of the tv-show. 
+
+
 
 
 ```{r}
-usableText <- iconv(OmarData$text, to = "ASCII", sub="")
-```
-
-```{r}
-OmarData_corpus<-Corpus(VectorSource(usableText))
-```
-
-```{r}
-#View(OmarData_corpus)
-```
-
-```{r}
-OmarData_corpus<-tm_map(OmarData_corpus,
-                          tolower)
-OmarData_corpus<-tm_map(OmarData_corpus,
-                          removePunctuation)
-OmarData_corpus<-tm_map(OmarData_corpus,
-                          removeNumbers)
-OmarData_corpus<-tm_map(OmarData_corpus,
-                          function(x)removeWords(x,
-                                                 stopwords("en")))
-OmarData_corpus<-tm_map(OmarData_corpus,
-                          function(x)removeWords(x,
-                                                 stopwords("french")))
-OmarData_corpus<-tm_map(OmarData_corpus,
-                          function(x)removeWords(x,
-                                                 stopwords("italian")))
-OmarData_corpus<-tm_map(OmarData_corpus,function(x)removeWords(x,stopwords("spanish")))
-```
-
-```{r}
-text_corpus <- tm_map(OmarData_corpus,
-                      content_transformer(function(x)
-                        iconv(x,to='ASCII',sub='byte')))
-```
-```{r}
-# The document-term matrix
-OmarData.tdm <- TermDocumentMatrix(text_corpus)
-m <- as.matrix(OmarData.tdm)
-m[1:5,1:10]
-```
-```{r}
-v <- sort(rowSums(m),decreasing=TRUE)
-d <- data.frame(word = names(v),freq=v)
-head(d, 5)
-```
-
-```{r}
-barplot(d[1:20,]$freq, las = 3,
-        names.arg = d[1:20,]$word,col ="lightblue",
-        main ="Most frequent words",
-        ylab = "Word frequencies")
-```
-```{r}
-findFreqTerms(OmarData.tdm, lowfreq=50)[1:10]
-```
-```{r}
-wordcloud(words = d$word, freq = d$freq, min.freq = 50,
-          max.words=100, random.order=FALSE,
-          colors=brewer.pal(4,"Dark2"))
-```
-
-```{r}
-OmarData.tdm<-removeSparseTerms(OmarData.tdm,
-                                  sparse=0.95)
-```
-
-```{r}
-OmarData.df <- as.data.frame(as.matrix(OmarData.tdm))
-#View(Chessdata.df)
-OmarData.df.scale <- scale(OmarData.df)
-```
-
-```{r}
-#A word is know seen as a vector 
-#We are going to compute the distance between 2 words
-#Hierarichical clustering - dendogram  
-OmarData.dist <- dist(OmarData.df.scale,
-                        method = "euclidean")
-OmarData.fit<-hclust(OmarData.dist, method="ward.D2")
-plot(OmarData.fit, main="Cluster-Chess") 
-```
-```{r}
-#choose 5 clusters to (hope) have the good numbers of numbers 
-#per group 
-groups <- cutree(OmarData.fit, k=4) 
-plot(OmarData.fit, main="Cluster")
-rect.hclust(OmarData.fit, k=4, border="blue")
-```
-```{r}
-#we want to know if there is a kind of links within the htags 
-#behavior of followers
-#relationship between followers tweets 
-#a kind of path, a kind of map, a kind of topics
 tags<-function(x) toupper(grep("#",strsplit(x,
                                             " +")[[1]],value=TRUE))
 l <- nrow(OmarData)
@@ -375,6 +266,135 @@ plot(hash.graph_simple, edge.width = 2,
      vertex.frame.color="black", label.color = "black",
      vertex.label.font=2, edge.arrow.size=0.5)
 ```
+This map is very valuable, whenever a hashtag is used, there is a good chance that it is linked to another one. 
+Let's focus on the relationship between french and the other hashtags for our study.    
+
+It can be observed that "French" is directly linked to the name of the main actor, which makes it possible to say that Omar Sy is now an international emblem of France, representing a classic character of French history, Arsene Lupin.   
+
+Dominated by American culture and its productions, the Netflix site is now linked to a French production as seen in this hashtaging analysis, which is a good sign of cultural diversity on an international platform. 
+
+## 7. Mention
+
+```{r}
+mentions <- as.data.frame(table(unlist(OmarData$mentions_screen_name)))
+wordcloud(words = mentions$Var1, freq = mentions$Freq, min.freq = 5,
+          max.words=100, random.order=FALSE,
+          colors=brewer.pal(3,"Dark2"))
+```
+
+The name of the French actor returns in the first mention of the tweet about the series. This is a very good sign of the popularity of French actors internationally. Netflix is obviously mentioned, notably Netflix France as well as the city of Paris. 
+
+## 8. Verified
+```{r}
+verified_table <- as.data.frame(prop.table(table(OmarData$verified)))
+bp<- ggplot(verified_table, aes(x="", y=Freq, fill=Var1))+
+geom_bar(width = 1, stat = "identity")
+verified_pie <- bp + coord_polar("y", start=0)
+verified_pie + scale_fill_brewer("Blues") +
+  theme(axis.text.x=element_blank()) +
+   geom_text(aes(y = Freq/2 + c(0, cumsum(Freq)[-length(Freq)]), 
+                label =paste(round(Freq*100,2),"%" )), size=5)  +
+  labs(x=NULL,y=NULL,
+                title="Verified ratio",
+                caption="\nSource: Data collected from Twitter's API") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+Most of the tweets come from verified tweeter accounts, proving the value of the tweet that we analyze here. 
+
+
+## 9. Sentiment analysis
+
+### 9.1 Cleaning steps
+
+Convert into ASCII format
+```{r}
+usableText <- iconv(OmarData$text, to = "ASCII", sub="")
+```
+
+Then we convert the text into the corpus format in R
+```{r}
+OmarData_corpus<-Corpus(VectorSource(usableText))
+```
+
+We convert the text into lower case, we remove the punctuation and the numbers. We take stop words of English, french, italian and spanish languages. 
+```{r}
+OmarData_corpus<-tm_map(OmarData_corpus,
+                          tolower)
+OmarData_corpus<-tm_map(OmarData_corpus,
+                          removePunctuation)
+OmarData_corpus<-tm_map(OmarData_corpus,
+                          removeNumbers)
+OmarData_corpus<-tm_map(OmarData_corpus,
+                          function(x)removeWords(x,
+                                                 stopwords("en")))
+OmarData_corpus<-tm_map(OmarData_corpus,
+                          function(x)removeWords(x,
+                                                 stopwords("french")))
+OmarData_corpus<-tm_map(OmarData_corpus,
+                          function(x)removeWords(x,
+                                                 stopwords("italian")))
+OmarData_corpus<-tm_map(OmarData_corpus,function(x)removeWords(x,stopwords("spanish")))
+
+OmarData_corpus<-tm_map(OmarData_corpus,function(x)removeWords(x,"httpstcorphoqjdf"))
+
+OmarData_corpus<-tm_map(OmarData_corpus,function(x)removeWords(x,c("httpstcorphoqjdf","httpstconffudhew")))
+ 
+```
+
+
+```{r}
+text_corpus <- tm_map(OmarData_corpus,
+                      content_transformer(function(x)
+                        iconv(x,to='ASCII',sub='byte')))
+```
+We compute the document matrix 
+```{r}
+# The document-term matrix
+OmarData.tdm <- TermDocumentMatrix(text_corpus)
+m <- as.matrix(OmarData.tdm)
+m[1:5,1:10]
+```
+
+### 9.2 Find frequent words of tweet
+
+
+```{r}
+v <- sort(rowSums(m),decreasing=TRUE)
+d <- data.frame(word = names(v),freq=v)
+head(d, 5)
+```
+French comes in 4th position in term of the most frequent words inside tweet. 
+Let's plot this in a barplot. 
+
+```{r}
+barplot(d[1:20,]$freq, las = 3,
+        names.arg = d[1:20,]$word,col ="lightblue",
+        main ="Most frequent words",
+        ylab = "Word frequencies")
+```
+And with wordlcoud
+
+```{r}
+wordcloud(words = d$word, freq = d$freq, min.freq = 50,
+          max.words=100, random.order=FALSE,
+          colors=brewer.pal(4,"Dark2"))
+```
+
+### 9.3 Average sentiment analysis
+
+Set threshold of relative document frequency for a term, above which the term will be removed.
+
+```{r}
+OmarData.tdm<-removeSparseTerms(OmarData.tdm,
+                                  sparse=0.95)
+```
+
+```{r}
+OmarData.df <- as.data.frame(as.matrix(OmarData.tdm))
+OmarData.df.scale <- scale(OmarData.df)
+```
+
+
 ```{r}
 plain.text<-vector()
 for(i in 1:dim(OmarData)[1]){
@@ -387,23 +407,30 @@ sentence_sentiment<-sentiment(get_sentences(plain.text))
 sentence_sentiment
 ```
 
-##Mean sentiment analysis
 ```{r}
 average_sentiment<-mean(sentence_sentiment$sentiment)
 average_sentiment
+median_sentiment<- median(sentence_sentiment$sentiment)
+median_sentiment
 ```
+In average, we can analyse that the sentiment of tweets are globaly positive (since it's above 0.05). 
 
-##Median sentiment analysis
+
+Standard deviation sentiment analysis
 ```{r}
 sd_sentiment<-sd(sentence_sentiment$sentiment)
 sd_sentiment
 ```
 
+
 ```{r}
 extract_sentiment_terms(get_sentences(plain.text))
 ```
 
-## Negatives words
+### 9.4 Negative words
+
+Let's analyse the negative words inside the tweets.
+
 ```{r}
 negative_words <- as.data.frame(table(unlist(extract_sentiment_terms(get_sentences(plain.text))$negative)))
 negative_words$Var1[negative_words$Var1 == 'black'] = NA
@@ -423,6 +450,14 @@ barplot(negative_words[1:20,]$Freq, las = 3,
         ylab = "Word frequencies")
 ```
 
+
+First of all we notice that a lot of negative terms are related to the description of the series and not to a feeling towards the viewing. One can notice the term "binge" as the first word directly related to the viewing of the serie but this word can be a quality of the show (for binge watching). Hell, regret, worst are the most negative words we have found concerning the TV-show which did not result in complete adhesion, which is absolutely normal for any series. 
+
+
+### 9.5 Positive words
+
+Let's analyse the positive words inside the tweets.
+
 ```{r}
 positive_words <- as.data.frame(table(unlist(extract_sentiment_terms(get_sentences(plain.text))$positive)))
 wordcloud(words = positive_words$Var1, freq = positive_words$Freq, min.freq = 4,
@@ -437,7 +472,45 @@ barplot(positive_words[1:20,]$Freq, las = 3,
         main ="Most frequent positive words",
         ylab = "Word frequencies")
 ```
+Users of tweeter notice the performance of the main actor with words of praise for him. 
+We can notice that most of the positive words concern mainly the actor and not the script or the sets. 
+The international reputation of a series is thus intimately linked to the popularity and performance of actors.
 
+
+Let's go to unsupervised learning. 
+
+## 10. Clustering analysis
+
+So as to learn more about the words in tweets and their links, we have performed a hierarichical clustering using distance computation between words. 
+
+
+```{r}
+OmarData.tdm<-removeSparseTerms(OmarData.tdm,
+                                  sparse=0.95)
+```
+
+```{r}
+OmarData.df <- as.data.frame(as.matrix(OmarData.tdm))
+OmarData.df.scale <- scale(OmarData.df)
+```
+
+```{r}
+OmarData.dist <- dist(OmarData.df.scale,
+                        method = "euclidean")
+OmarData.fit<-hclust(OmarData.dist, method="ward.D2")
+plot(OmarData.fit, main="Cluster-Lupin") 
+```
+
+Choose 4 clusters to (hope) have the good numbers of categories. 
+```{r}
+groups <- cutree(OmarData.fit, k=4) 
+plot(OmarData.fit, main="Cluster")
+rect.hclust(OmarData.fit, k=4, border="blue")
+```
+
+This clustering allows us to identify the key categories of the most frequent words within the tweets. However, we can notice that this clustering is not very efficient and it seems more relevant to try an LDA analysis.
+
+## 11. Latence Diriged Allocation (LDA)
 
 ```{r}
 text_corpus2<-text_corpus[1:200]
@@ -445,17 +518,15 @@ doc.lengths<-rowSums(as.matrix(DocumentTermMatrix(text_corpus2)))
 ```
 
 ```{r}
-#doc.lengths
-#DocumentTermMatrix(text_corpus2)
 dtm <- DocumentTermMatrix(text_corpus2[doc.lengths > 0])
 ```
 
 ```{r}
-#Latence Diriged Allocation (LDA) #bayses formula ? (not exactly the same) 
+
 # Pick a random seed for replication
 SEED = sample(1:1000000, 1)
 # Let's start with 2 topics
-k = 3
+k = 2
 Topics_results<-LDA(dtm, k = k, control = list(seed = SEED))
 terms(Topics_results,15)
 topics(Topics_results)
@@ -474,3 +545,13 @@ tidy_model_beta %>%
        y = "beta score",
        title = "Topic modeling")
 ```
+
+
+## Conclusion
+
+Following this study, we can conclude that the French series Arsen lupin has had a great international impact through the study of tweeter reactions. 
+
+Nevertheless this study is incomplete and would deserve more learning by accessing more data from twitter or using other api. Indeed, twitter limits to 7 days the data recovery which limits the field of study for free api users. 
+However, one can imagine that Netflix has a paid account and that they are able to take these searches to a larger extent. In this case, this project is a good Proof of Concept of the relevance of the study of social networks for online platforms. 
+
+
