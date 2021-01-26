@@ -59,16 +59,11 @@ t <- create_token("FirstApp6934",
 
 ```
 
-
 ```{r}
 setup_twitter_oauth(my.key, my.secret, access_token, access_secret)
 ```
 ```{r}
-chess <- searchTwitter("chess+the queen's gambit ", n=10000, since='2020-10-23', until='2021-01-24')
-```
-
-```{r}
-View(chess) 
+#chess <- searchTwitter("chess+the queen's gambit ", n=10000, since='2020-10-23', until='2021-01-24')
 ```
 
 ```{r}
@@ -106,16 +101,48 @@ OmarData$location2[OmarData$location2==""] <- NA
 OmarData$location2[OmarData$location2==", "] <- NA
 ```
 
+Group City Names
+
+```{r}
+OmarData$location2[OmarData$location2 == 'London' & !is.na(OmarData$location2)] = 'London, England'
+```
+
+```{r}
+View(OmarData$location2[OmarData$location2 == 'London' & !is.na(OmarData$location2)])
+```
+
+```{r}
+OmarData$location2[OmarData$location2 == 'Paris' & !is.na(OmarData$location2)] = 'Paris, France'
+```
+
+```{r}
+OmarData$location2[OmarData$location2=='she/her'] <- NA
+```
+
+```{r}
+OmarData$location2[OmarData$location2 == 'Los Angeles' & !is.na(OmarData$location2)] = 'Los Angeles, CA'
+```
+
+```{r}
+OmarData$location2[OmarData$location2 == 'New York' & !is.na(OmarData$location2)] = 'New York, NY'
+```
+
+```{r}
+OmarData$location2[OmarData$location2 == 'Ile-de-France, France' & !is.na(OmarData$location2)] = 'Paris, France'
+```
+
 ```{r}
 
 OmarData %>%count(location2, sort=TRUE) %>%
   mutate(location2=reorder(location2,n)) %>%
   na.omit()%>% top_n(10)%>%ggplot(aes(x=location2,y=n))+
-  geom_bar(stat="identity")+geom_col()+coord_flip() +
+  geom_bar(stat="identity")+
+  coord_flip() +
   labs(x = "Location", y = "Count",
-       title = "Twitter users - unique locations ")+
-  theme_light()
-
+       title = "Most Popular cities - Recent Tweets")+
+  theme_light()+
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position = "none")
 ```
 ```{r}
 ts_plot(OmarData, "hours")+
@@ -126,8 +153,39 @@ ts_plot(OmarData, "hours")+
                 subtitle="Twitter status counts 1-hour intervals",
                 caption="\nSource: Data collected from Twitter's API"
   )
+```
+
+```{r}
+OmarData %>%count(source, sort=TRUE) %>%
+  mutate(source=reorder(source,n)) %>%
+  na.omit()%>% top_n(5)%>%ggplot(aes(x=source,y=n))+
+  geom_bar(stat="identity")+
+  coord_flip() +
+  labs(x = "Location", y = "Count")+
+  theme_light()+
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position = "none")
+```
+Retweet 
+
+```{r}
 
 ```
+
+
+
+
+
+
+
+```{r}
+View(OmarData)
+```
+
+
+
+
+
 ```{r}
 usableText <- iconv(OmarData$text, to = "ASCII", sub="")
 ```
