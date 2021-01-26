@@ -34,7 +34,7 @@ library(stringr)
 library(wordcloud)
 library(igraph)
 library(sentimentr)
-library(tidytext)
+library(tidytext)TES
 library(topicmodels)
 library(tidyverse)
 library(rvest)
@@ -166,24 +166,63 @@ OmarData %>%count(source, sort=TRUE) %>%
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(legend.position = "none")
 ```
-Retweet 
+##Retweet 
 
 ```{r}
+retweet_table <- as.data.frame(prop.table(table(OmarData$is_retweet)))
+
+bp<- ggplot(retweet_table, aes(x="", y=Freq, fill=Var1))+
+geom_bar(width = 1, stat = "identity")
+retweet_pie <- bp + coord_polar("y", start=0)
+retweet_pie + scale_fill_brewer("Blues") +
+  theme(axis.text.x=element_blank()) +
+   geom_text(aes(y = Freq/2 + c(0, cumsum(Freq)[-length(Freq)]), 
+                label =round(Freq,2) ), size=5) +
+  labs(x=NULL,y=NULL,
+                title="Retweet ratio",
+                caption="\nSource: Data collected from Twitter's API") +
+  theme(plot.title = element_text(hjust = 0.5))
 
 ```
 
-
-
-
-
-
+##Hastags
 
 ```{r}
-View(OmarData)
+
+hastags <- as.data.frame(table(unlist(OmarData$hashtags)))
+
+wordcloud(words = hastags$Var1, freq = hastags$Freq, min.freq = 2,
+          max.words=100, random.order=FALSE, scale = c(2,2),
+          colors=brewer.pal(3,"Dark2"))
+```
+##Mention
+
+```{r}
+
+mentions <- as.data.frame(table(unlist(OmarData$mentions_screen_name)))
+
+wordcloud(words = mentions$Var1, freq = mentions$Freq, min.freq = 5,
+          max.words=100, random.order=FALSE,
+          colors=brewer.pal(3,"Dark2"))
 ```
 
+##Verified
+```{r}
+verified_table <- as.data.frame(prop.table(table(OmarData$verified)))
 
+bp<- ggplot(verified_table, aes(x="", y=Freq, fill=Var1))+
+geom_bar(width = 1, stat = "identity")
+verified_pie <- bp + coord_polar("y", start=0)
+verified_pie + scale_fill_brewer("Blues") +
+  theme(axis.text.x=element_blank()) +
+   geom_text(aes(y = Freq/2 + c(0, cumsum(Freq)[-length(Freq)]), 
+                label =round(Freq,2) ), size=5)  +
+  labs(x=NULL,y=NULL,
+                title="Verified ratio",
+                caption="\nSource: Data collected from Twitter's API") +
+  theme(plot.title = element_text(hjust = 0.5))
 
+```
 
 
 ```{r}
@@ -195,7 +234,7 @@ OmarData_corpus<-Corpus(VectorSource(usableText))
 ```
 
 ```{r}
-View(OmarData_corpus)
+#View(OmarData_corpus)
 ```
 
 ```{r}
@@ -244,7 +283,7 @@ barplot(d[1:20,]$freq, las = 3,
 findFreqTerms(OmarData.tdm, lowfreq=50)[1:10]
 ```
 ```{r}
-wordcloud(words = d$word, freq = d$freq, min.freq = 40,
+wordcloud(words = d$word, freq = d$freq, min.freq = 50,
           max.words=100, random.order=FALSE,
           colors=brewer.pal(4,"Dark2"))
 ```
@@ -277,9 +316,9 @@ plot(OmarData.fit, main="Cluster-Chess")
 ```{r}
 #choose 5 clusters to (hope) have the good numbers of numbers 
 #per group 
-groups <- cutree(OmarData.fit, k=5) 
+groups <- cutree(OmarData.fit, k=4) 
 plot(OmarData.fit, main="Cluster")
-rect.hclust(OmarData.fit, k=5, border="red")
+rect.hclust(OmarData.fit, k=4, border="blue")
 ```
 ```{r}
 #we want to know if there is a kind of links within the htags 
@@ -318,6 +357,7 @@ alltags <- NULL
 for (i in 1:l) alltags<-union(alltags,taglist[[i]])
 ```
 
+
 ```{r}
 hash.graph <- graph.empty(directed = T)
 # Populate it with nodes
@@ -343,13 +383,11 @@ for (tags in taglist){
 ```{r}
 V(hash.graph)$color <- "black"
 E(hash.graph)$color <- "black"
-V(hash.graph)$name <- paste("#",V(hash.graph)$name,
-                            sep = "")
 V(hash.graph)$label.cex = 0.75
-V(hash.graph)$size <- 20
-V(hash.graph)$size2 <- 2
+V(hash.graph)$size <- 50
+V(hash.graph)$size2 <- 4
 hash.graph_simple<-delete.vertices(simplify(hash.graph),
-                                   degree(hash.graph)<=5)
+                                   degree(hash.graph)<= 9)
 
 plot(hash.graph_simple, edge.width = 2,
      edge.color = "black", vertex.color = "SkyBlue2",
@@ -368,12 +406,14 @@ sentence_sentiment<-sentiment(get_sentences(plain.text))
 sentence_sentiment
 ```
 
+##Mean sentiment analysis
 ```{r}
 
 average_sentiment<-mean(sentence_sentiment$sentiment)
 average_sentiment
 ```
 
+##Median sentiment analysis
 ```{r}
 sd_sentiment<-sd(sentence_sentiment$sentiment)
 sd_sentiment
@@ -382,6 +422,45 @@ sd_sentiment
 ```{r}
 extract_sentiment_terms(get_sentences(plain.text))
 ```
+
+## Negatives words
+```{r}
+negative_words <- as.data.frame(table(unlist(extract_sentiment_terms(get_sentences(plain.text))$negative)))
+negative_words$Var1[negative_words$Var1 == 'black'] = NA
+negative_words = na.omit(negative_words)
+wordcloud(words = negative_words$Var1, freq = negative_words$Freq, min.freq = 4,
+          max.words=100, random.order=FALSE,
+          colors=brewer.pal(4,"Dark2"))
+
+```
+```{r}
+negative_words <- negative_words[order(negative_words$Freq, decreasing = TRUE),]
+```
+
+```{r}
+barplot(negative_words[1:20,]$Freq, las = 3,
+        names.arg = negative_words[1:20,]$Var1,col ="lightblue",
+        main ="Most frequent negative words",
+        ylab = "Word frequencies")
+```
+
+```{r}
+positive_words <- as.data.frame(table(unlist(extract_sentiment_terms(get_sentences(plain.text))$positive)))
+
+wordcloud(words = positive_words$Var1, freq = positive_words$Freq, min.freq = 4,
+          max.words=100, random.order=FALSE,
+          colors=brewer.pal(4,"Dark2"))
+
+```
+
+```{r}
+positive_words <- positive_words[order(positive_words$Freq, decreasing = TRUE),]
+barplot(positive_words[1:20,]$Freq, las = 3,
+        names.arg = positive_words[1:20,]$Var1,col ="lightblue",
+        main ="Most frequent positive words",
+        ylab = "Word frequencies")
+```
+
 
 ```{r}
 text_corpus2<-text_corpus[1:200]
