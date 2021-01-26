@@ -46,10 +46,10 @@ library(reshape2)
 ```{r include=FALSE}
 download.file(url="http://curl.haxx.se/ca/cacert.pem", destfile="cacert.pem")
 
-my.key <- "VjKpUNyCAQVnjvgyuPdOrp7Vs"
-my.secret <- "LXv3XKqxBMEYSHUKAOAMKH8ASW7fmqrefkjn9CBimVDNO2mzsB"
-access_token <- "1321220647624888322-M8mObeu1ANUAi7HOXqfo5ZSk9voOQ7"
-access_secret <- "u9El5vMwXMMk32VGxhyQuCDfbe08aagaHUNOIbSCyRDM6"
+my.key <- 
+my.secret <- 
+access_token <- 
+access_secret <- 
 
 t <- create_token("FirstApp6934",
                   my.key,
