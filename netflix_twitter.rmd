@@ -9,7 +9,7 @@ output:
 ---
 
 ## 1. Project introduction
-In this project, we are going to use the Advanced Social Media Analytics course in order to study the international impact of aTfrench tv-show : Arsene Lupin. In our course, we learned how to use the api of twitter in order to establish anlaysis with the R language. Indeed, studying the tweets following the release of a series broadcast on an international platform such as Netflix allows us to better understand the reception of the show after an audiance and to measure its popularity.   
+In this project, we are going to use the Advanced Social Media Analytics course in order to study the international impact of a French tv-show : Arsene Lupin. In our course, we learned how to use the api of twitter in order to establish anlaysis with the R language. Indeed, studying the tweets following the release of a series broadcast on an international platform such as Netflix allows us to better understand the reception of the show after an audiance and to measure its popularity.   
 
 Given the limiation of the free version of tweeter api, we can download only tweets within a 7-days windows. This is why we have chosen to study the Arsene Lupin show available on Netflix on January 7, 2021. Arsene Lupin is a rare French series on Netflix featuring an internationally known French actor (mostly from the US audience), spoken in French, whose main character is an icon of French theft and whose main venue is Paris. 
 
@@ -73,12 +73,8 @@ OmarData <- search_tweets("LUPIN OR OMAR SY", n=100000, type="recent", token=t, 
 
 
 ```{r}
-View(OmarData$text)
+head(OmarData$text)
 ```
-```{r}
-length(unique(OmarData))
-```
-Without retweets, he have 1371 tweets about this topic within the week. 
 
 ```{r}
 typeof(OmarData)
@@ -91,7 +87,7 @@ Without retweet, we have
 ```{r}
 length(unique(OmarData$location))
 ```
-We have more than 1000 different locations of the tweets
+We have more than 1000 different locations of the tweets. 
 
 
 
@@ -134,6 +130,8 @@ OmarData %>%count(location2, sort=TRUE) %>%
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(legend.position = "none")
 ```
+
+   
 We can observe that the French tv shows has a wide international audience. Its first public comes from England, London then Paris and Los Angeles. This is a great indicator of the international success of a french serie.  
 
 
@@ -166,6 +164,7 @@ OmarData %>%count(source, sort=TRUE) %>%
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(legend.position = "none")
 ```
+   
 We can analyse that most of the tweets come from mobile device : first Iphone user and then Android. The most of the rest come from the desktop web app. 
 
 ## 5. Study the retweets 
@@ -184,8 +183,8 @@ retweet_pie + scale_fill_brewer("Blues") +
                 caption="\nSource: Data collected from Twitter's API") +
   theme(plot.title = element_text(hjust = 0.5))
 ```
-
-The rewteet ration is well-balanced, meaning that the tweets talking about the show causes interactivity between people which is a good sign ! 
+  
+The retweet ration is well-balanced, meaning that the tweets talking about the show causes interactivity between people which is a good sign ! 
 
 
 ## 6. Hashtag
@@ -197,6 +196,8 @@ wordcloud(words = hastags$Var1, freq = hastags$Freq, min.freq = 2,
           colors=brewer.pal(3,"Dark2"))
 
 ```
+  
+
 The name of the TV show comes first in this hashtag analytic. Let's study the links between the hashtags so as to better understand the behavior of tweeter users. This relationship will allow us to draw a map covering the topics of the tv-show. 
 
 
@@ -266,6 +267,8 @@ plot(hash.graph_simple, edge.width = 2,
      vertex.frame.color="black", label.color = "black",
      vertex.label.font=2, edge.arrow.size=0.5)
 ```
+  
+
 This map is very valuable, whenever a hashtag is used, there is a good chance that it is linked to another one. 
 Let's focus on the relationship between french and the other hashtags for our study.    
 
@@ -299,6 +302,8 @@ verified_pie + scale_fill_brewer("Blues") +
                 caption="\nSource: Data collected from Twitter's API") +
   theme(plot.title = element_text(hjust = 0.5))
 ```
+  
+
 Most of the tweets come from verified tweeter accounts, proving the value of the tweet that we analyze here. 
 
 
@@ -372,6 +377,8 @@ barplot(d[1:20,]$freq, las = 3,
         main ="Most frequent words",
         ylab = "Word frequencies")
 ```
+  
+
 And with wordlcoud
 
 ```{r}
@@ -472,6 +479,8 @@ barplot(positive_words[1:20,]$Freq, las = 3,
         main ="Most frequent positive words",
         ylab = "Word frequencies")
 ```
+  
+
 Users of tweeter notice the performance of the main actor with words of praise for him. 
 We can notice that most of the positive words concern mainly the actor and not the script or the sets. 
 The international reputation of a series is thus intimately linked to the popularity and performance of actors.
