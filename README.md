@@ -1,4 +1,4 @@
-# Study the international impact of a French tv-show with twitter api
+# Study the International Impact of a French Tv-show with Twitter Api
 U2 Project - Advanced Social Media Analytics - AI&BA - TBS
 Antoine Settelen, Edgar Jullien, Simon Weiss   
 
@@ -10,6 +10,7 @@ In this project, we are going to use the Advanced Social Media Analytics course 
 
 Given the limiation of the free version of tweeter api, we can download only tweets within a 7-days windows. This is why we have chosen to study the Arsene Lupin show available on Netflix on January 7, 2021. Arsene Lupin is a rare French series on Netflix featuring an internationally known French actor (mostly from the US audience), spoken in French, whose main character is an icon of French theft and whose main venue is Paris. 
 
+! [OmarSy] (https://cdn-elle.ladmedia.fr/var/plain_site/storage/images/loisirs/series/netflix-omar-sy-devient-arsene-lupin-dans-un-teaser-allechant-3861315/92829946-1-fre-FR/Netflix-Omar-Sy-devient-Arsene-Lupin-dans-un-teaser-allechant.jpg)
 ## Instructions 
 
 Your topic should be related to Social Media Analytics with a Business/economics/finance interest;
